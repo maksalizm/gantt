@@ -110,6 +110,7 @@
                 ],
                 isCreated: false,
                 isProject: true,
+                taskLength: '<%= data.project[i].task.length%>'
             },
             <% if (data.project[i].task.length === 0) {%>
             {
@@ -120,6 +121,7 @@
                 ],
                 isCreated: false,
                 isProject: false,
+                taskLength: 0
             },
             <%}%>
 
@@ -134,10 +136,11 @@
                             to: new Date('<%= data.project[i].task[j].values[0].to %>').getTime(),
                             label: '<%= data.project[i].task[j].values[0].label %>',
                             dataObj: {
-                                parentId: '<%= data.project[i].task[j]._id %>'
+                                parentId: '<%= data.project[i].task[j]._id %>',
                             }
                         },
                     ],
+                    projectId: '<%= data.project[i]._id %>',
                     isCreated: false,
                     isProject: false
                 }

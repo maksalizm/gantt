@@ -1,7 +1,6 @@
 {
   "name": "gannt",
   "version": "1.0.0",
-  "description": "",
   "main": "server.js",
   "dependencies": {
     "async": "^2.5.0",
@@ -22,5 +21,14 @@
     "start": "node server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maksalizm/gantt.git"
+  },
+  "bugs": {
+    "url": "https://github.com/maksalizm/gantt/issues"
+  },
+  "homepage": "https://github.com/maksalizm/gantt#readme",
+  "description": ""
 }

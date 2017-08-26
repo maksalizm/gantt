@@ -746,7 +746,6 @@
 
                 // **Days (default)**
                     default:
-                        console.log(element.dateEnd);
                         // edit:  maksalizm
                     range = tools.parseDateRange(element.dateStart, element.dateEnd.setMonth(element.dateEnd.getMonth() + 1));
                     // range.length = range.length + 30;

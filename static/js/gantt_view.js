@@ -148,15 +148,17 @@
     $(document).on('click', '.addTask', function(e) {
         var $self = $(this);
         var $targetId = +$self.parents('.row').data().id;
-        console.log($targetId);
-        $(window.ganttData.sourceData).each(function(index, value) {
+        var projectId = $($self.parents()
+                             .prevAll('.fn-wide')[0])
+                             .data().id;
+        $(sourceData).each(function(index, value) {
             if (value.id === $targetId) {
-                window.ganttData.sourceData.splice(index, 1);
+                sourceData.splice(index, 1);
             }
         });
         $self.replaceWith('<div style="width:100%;height: 100%;position:relative;background=color:#ffffff;">' +
             '<input style="width:80%;height: 100%;position:absolute;top:0;left:0;" id="taskName"/>' +
-            '<button style="padding:2px;position:absolute;top: 3px; right: 3px;" class="fa fa-plus" type="button" id="addGanttTaskBtn"></button>'+
+            '<button style="padding:2px;position:absolute;top: 3px; right: 3px;" class="fa fa-plus" data-project-id="'+projectId+'" type="button" id="addGanttTaskBtn"></button>'+
             '</div>')
     });
 
@@ -181,11 +183,14 @@
                     dataObj: {
                         parentId: window.taskId++
                     },
-                    label: $('#modalProjectName').val()
+                    label: $('#modalProjectName').val(),
+                    taskLength: 0,
+                    isProject: true,
                 }
             ],
             isCreated: true,
-            isProject: true
+            isProject: true,
+            taskLength: 0
         }, {
             id: window.taskId++,
             desc: 'add task',
@@ -204,7 +209,14 @@
 
     $(document).on('click', '#addGanttTaskBtn', function() {
         var $taskElem = $('#taskName');
-        sourceData.push({
+        var targetData = $(this).data();
+        var projectIndex = findDataByValue(sourceData, targetData.projectId);
+        var immutableArray = sourceData.slice(0, projectIndex);
+        var beforeArray = sourceData.slice(projectIndex, projectIndex + sourceData[projectIndex].taskLength + 1);
+        var afterArray = sourceData.slice(projectIndex + sourceData[projectIndex].taskLength + 1, sourceData.length);
+
+        ++sourceData[projectIndex].taskLength;
+        beforeArray.push({
             id: window.taskId,
             name: '',
             desc: $taskElem.val(),
@@ -226,7 +238,9 @@
             isCreated: false,
             isProject: false,
         });
+        sourceData = immutableArray.concat(beforeArray, afterArray);
         ganttOptions.itemsPerPage = sourceData.length;
+        ganttOptions.source = sourceData;
         $('#gantt').gantt(
             ganttOptions
         );
@@ -244,6 +258,8 @@
                     }
                 }
             ],
+            taskLength: 0,
+            isProject: true,
             isCreated: true
         });
         ganttOptions.itemsPerPage = sourceData.length;
@@ -295,4 +311,14 @@
     //         }
     //     })
     // })
+
+
+    function findDataByValue(arr, value) {
+        var arrLength = arr.length;
+        for(var i = 0; i < arrLength; i++) {
+            if (arr[i].id === value) {
+                return i;
+            }
+        }
+    }
 }(jQuery));
