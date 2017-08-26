@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/gannt/css/style.css" type="text/css" rel="stylesheet">
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            padding: 0 0 50px 0;
+        }
+
+        h1 {
+            margin: 40px 0 20px 0;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #DDD;
+            margin-top: 50px;
+            margin-bottom: 25px;
+        }
+
+        table th:first-child {
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+<ul>
+<% for(var i = 0; i < data.length; i++) {%>
+    <li><a href="/gantt/<%= data[i]._id %>"><%= data[i].ganttName %></a></li>
+<% } %>
+</ul>
+<script src="/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="/gannt/js/jquery.fn.gantt.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/latest/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script>
+</script>
+
+</body>
+</html>

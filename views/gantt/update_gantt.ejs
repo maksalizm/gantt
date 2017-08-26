@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/gantt/css/style.css" type="text/css" rel="stylesheet">
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            padding: 0 0 50px 0;
+        }
+
+        h1 {
+            margin: 40px 0 20px 0;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #DDD;
+            margin-top: 50px;
+            margin-bottom: 25px;
+        }
+
+        table th:first-child {
+            width: 150px;
+        }
+    </style>
+    <script src="https://use.fontawesome.com/65b3798f54.js"></script>
+</head>
+<body>
+
+<p><%= data.ganttName %></p>
+<form method="post">
+    <input type="hidden" id="data_id" value="<%= data._id %>">
+    <div id="ganttWrapper">
+        <div class="gantt">
+
+        </div>
+    </div>
+    <!--<div class="task-add-container">-->
+        <!--<label for="">-->
+            <!--task Name-->
+            <!--<input type="text" name="taskName" class="taskName">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task desc-->
+            <!--<input type="text" name="taskDesc" class="taskDesc">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task start-->
+            <!--<input type="text" name="task_start" class="task_start">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task end-->
+            <!--<input type="text" name="task_end" class="task_end">-->
+        <!--</label>-->
+        <!--<button type="button" class="register">적용</button>-->
+        <!--<button type="button" class="add-task">Add task</button>-->
+    <!--</div>-->
+    <button type="button" id="submit">저장</button>
+</form>
+<!--<form method="post">-->
+    <!--<div id="task">-->
+        <!--<label for="">-->
+            <!--task Name-->
+            <!--<input type="text" name="ganttName" id="ganttName">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task desc-->
+            <!--<input type="text" name="taskName" id="taskName">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task start-->
+            <!--<input type="text" name="task_start" id="task_start">-->
+        <!--</label>-->
+        <!--<label for="">-->
+            <!--task end-->
+            <!--<input type="text" name="task_end" id="task_end">-->
+        <!--</label>-->
+        <!--<button type="button" class="add-task">Add task</button>-->
+    <!--</div>-->
+<!--</form>-->
+
+<script src="/jquery.min.js"></script>
+<script src="/moment.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="/gantt/js/jquery.fn.gantt.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/latest/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script>
+    $(function () {
+        "use strict";
+        var sourceData = [
+            <% for(var i = 0; i < data.project.length; i++) { %>
+            {
+                id: '<%= data.project[i]._id %>',
+                name: '<%= data.project[i].name %>',
+                desc: '',
+                values: [
+                    {
+                        from: new Date('<%= data.project[i].values[0].from %>').getTime(),
+                        to: new Date('<%= data.project[i].values[0].to %>').getTime(),
+                        label: '<%= data.project[i].values[0].label %>'
+                    }
+                ],
+                isCreated: false
+            },
+                <% for(var j=0; j < data.project[i].task.length; j++) {%>
+                {
+                    id: '<%= data.project[i].task[j]._id %>',
+                    name: '',
+                    desc: '<%= data.project[i].task[j].name %>',
+                    values: [
+                        {
+                            from: new Date('<%= data.project[i].task[j].values[0].from %>').getTime(),
+                            to: new Date('<%= data.project[i].task[j].values[0].to %>').getTime(),
+                            label: '<%= data.project[i].task[j].values[0].label %>'
+                        },
+                    ],
+                    isCreated: false
+                }
+                <% } %>
+            <% } %>
+        ]
+        var currentDataId = sourceData.length - 1;
+        var addGanttTemplate =
+            '    <div id="task">\n' +
+            '        <label for="">\n' +
+            '            task Name\n' +
+            '            <input type="text" name="taskName" id="taskName">\n' +
+            '        </label>\n' +
+            '        <label for="">\n' +
+            '            task desc\n' +
+            '            <input type="text" name="taskDesc" id="taskDesc">\n' +
+            '        </label>\n' +
+            '        <label for="">\n' +
+            '            task start\n' +
+            '            <input type="text" name="task_start" id="task_start">\n' +
+            '        </label>\n' +
+            '        <label for="">\n' +
+            '            task end\n' +
+            '            <input type="text" name="task_end" id="task_end">\n' +
+            '        </label>\n' +
+            '        <button class="register">적용</button>\n' +
+            '        <button type="button" class="add-task">Add task</button>\n' +
+            '    </div>'
+
+        var ganttElem = $(".gantt")
+        ganttElem.gantt({
+            source: sourceData,
+            dow: ["일", "월", "화", "수", "목", "금", "토"],
+            navigate: "scroll",
+            scale: "days",
+            maxScale: "year",
+            minScale: "days",
+            itemsPerPage: sourceData.length,
+            onItemClick: function (dataObj, dt) {
+                var self = this;
+                this.source.forEach(function (data) {
+                    if (data.id === dataObj.parentId && data.canEdit === 'true') {
+                        var obj = {
+                            from: moment(data.values[data.values.length - 1].to).format('YYYY-MM-DD'),
+                            to: moment(dt).format('YYYY-MM-DD'),
+                            customClass: data.values[0].customClass
+                        };
+                        data.values[0].to = dt;
+                        $.ajax({
+                            method: 'post',
+                            data: {
+                                values: JSON.stringify(obj),
+                                dataId: dataObj.parentId
+                            },
+                            success: function (data) {
+                                console.log(data);
+                            }
+                        })
+                    }
+                    if (data.id === dataObj.parentId) {
+                        data.values[data.values.length-1].to=dt;
+                    }
+                })
+
+
+
+                $('.gantt').gantt({
+                    source: self.source,
+                    dow: self.dow,
+                    navigate: self.navigate,
+                    scale: self.scale,
+                    maxScale: self.maxScale,
+                    itemsPerPage: self.itemsPerPage,
+                    onAddClick: self.onAddClick,
+                    onRender: self.onRender,
+                    onItemClick: self.onItemClick
+                })
+            },
+            onDeleteClick: function(dt) {
+
+            },
+            onAddClick: function (e, dt, rowId) {
+                var self = this;
+                this.source.forEach(function (data, index, array) {
+                    if (data.id === rowId && !data.isCreated && array[index-1].values[0].to > dt) {
+                        data.values[0].to = dt;
+                        $('.gantt').gantt({
+                            source: self.source,
+                            dow: self.dow,
+                            navigate: self.navigate,
+                            scale: self.scale,
+                            maxScale: self.maxScale,
+                            itemsPerPage: self.itemsPerPage,
+                            onAddClick: self.onAddClick,
+                            onRender: self.onRender,
+                            onItemClick: self.onItemClick
+                        })
+                    }
+                    else if (+data.id === rowId && data.isCreated) {
+                        if (!data.values[0].from) {
+                            var top = $('#rowheader' + index).data().offset + 24 * 4 + 3;
+                            var $pin = $('<i id="map_pin" class="fa fa-map-pin" aria-hidden="true"/>');
+                            // elementFromPoint
+                            var left = $('#dh-' + dt).data().offset;
+                            $pin.css({
+                                top: top,
+                                left: left + 8,
+                                position: 'absolute'
+                            })
+                            $('.dataPanel').append($pin)
+                            data.values[0].from = dt;
+                        } else {
+                            data.values[0].to = dt;
+                            $('#map_pin').remove();
+                            $('.gantt').gantt({
+                                source: self.source,
+                                dow: self.dow,
+                                navigate: self.navigate,
+                                scale: self.scale,
+                                maxScale: self.maxScale,
+                                itemsPerPage: self.itemsPerPage,
+                                onAddClick: self.onAddClick,
+                                onRender: self.onRender,
+                                onItemClick: self.onItemClick
+                            })
+                        }
+                    }
+                })
+            },
+            onRender: function () {
+                var self = this;
+                $(document).off('click.addGantEvent', '#addGanttBtn');
+                $(document).on('click.addGantEvent', '#addGanttBtn', function () {
+                    var taskName = $('#taskName').val();
+                    var taskDesc = $('#taskDesc').val()
+                    sourceData.push({
+                        id: ++currentDataId + '',
+                        name: taskName,
+                        desc: taskDesc,
+                        values: [{}],
+                        canEdit: 'false',
+                        isCreated: true
+                    })
+                    sourceData.push({
+                        id: ++currentDataId,
+                        name: '파트너 작업 진행 상황',
+                        desc: '파트너 작업',
+                        values: [{}],
+                        isCreated: true
+                    })
+                    $('.gantt').gantt({
+                        source: self.source,
+                        dow: self.dow,
+                        navigate: self.navigate,
+                        scale: self.scale,
+                        maxScale: self.maxScale,
+                        itemsPerPage: sourceData.length,
+                        onAddClick: self.onAddClick,
+                        onRender: self.onRender,
+                        onItemClick: self.onItemClick
+                    })
+                })
+            }
+        });
+        $('.register').on('click', function(evt) {
+            var $target = $(evt.target);
+            var $addContainer = $target.closest('.task-add-container');
+            var obj = {};
+            $addContainer.find('input').each(function(index, value) {
+                var $target = $(value);
+                obj[$target.attr('name')] = $target.val();
+            })
+            sourceData.push({
+                id: ++currentDataId,
+                name: obj.taskName,
+                desc: obj.taskDesc,
+                values: [],
+                isCreated: true
+            })
+            sourceData[sourceData.length-1].values.push({
+                from: new Date(obj.task_start).getTime(),
+                to: new Date(obj.task_end).getTime()
+            })
+            sourceData.push({
+                id: ++currentDataId,
+                name: '파트너 작업 진행 상황',
+                desc: '파트너 작업',
+                values: [],
+                isCreated: true
+            })
+            sourceData[sourceData.length-1].values.push({
+                from: new Date(obj.task_start).getTime(),
+                to: new Date(obj.task_start).getTime()
+            })
+            $('.gantt').gantt({
+                source: sourceData,
+                dow: ["일", "월", "화", "수", "목", "금", "토"],
+                navigate: "scroll",
+                scale: "days",
+                maxScale: "months",
+                minScale: "days",
+                itemsPerPage: sourceData.length,
+                onItemClick: function (data) {
+                },
+                onAddClick: function (dt, rowId) {
+                    var self = this;
+                    this.source.forEach(function (data) {
+                        if (data.id === rowId) {
+                            data.values.push({
+                                from: data.values[data.values.length - 1].to,
+                                to: dt,
+                                customClass: data.values[0].customClass
+                            })
+                            self.onRender();
+                        }
+                    })
+                    $('.gantt').gantt({
+                        source: self.source,
+                        dow: self.dow,
+                        navigate: self.navigate,
+                        scale: self.scale,
+                        maxScale: self.maxScale,
+                        itemsPerPage: sourceData.length,
+                        onAddClick: self.onAddClick,
+                        onRender: self.onRender
+                    })
+                },
+                onRender: function () {
+
+                }
+            })
+        })
+        prettyPrint();
+        $('#submit').on('click', function(evt) {
+            evt.preventDefault();
+            var sendData = [];
+            for(var i = 0, dataLength = data.length; i < dataLength; i++) {
+                if (data[i].isCreated) {
+                    sendData.push(data[i])
+                }
+            }
+            var ganttId = $('#data_id').val();
+            console.log(sendData);
+            $.post('/gantt/update/' + ganttId, { data: sendData }, function(){
+                location.href = '/gantt/' + ganttId;
+            })
+        })
+    });
+</script>
+
+</body>
+</html>

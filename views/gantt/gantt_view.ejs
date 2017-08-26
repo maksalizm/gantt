@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="http://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/gantt/css/style.css" type="text/css" rel="stylesheet">
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css" rel="stylesheet" type="text/css">
+    <style type="text/css">
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            padding: 0 0 50px 0;
+        }
+
+        h1 {
+            margin: 40px 0 20px 0;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            padding-bottom: 3px;
+            border-bottom: 1px solid #DDD;
+            margin-top: 50px;
+            margin-bottom: 25px;
+        }
+
+        table th:first-child {
+            width: 150px;
+        }
+
+        .addTask, #addProject {
+            color: #2099bb;
+            text-decoration: underline;
+            font-weight: normal;
+        }
+        .addTask:hover, #addProject:hover {
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://use.fontawesome.com/65b3798f54.js"></script>
+</head>
+<body>
+
+<p><%= data.ganttName %></p>
+<div class="gantt" id="gantt">
+</div>
+
+<div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="create_project_ModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="create_project_ModalLabel">프로젝트 생성</h4>
+            </div>
+            <div class="modal-body">
+                <form id="createGantt">
+                    <div class="form-group">
+                        <label for="modalProjectName" class="control-label">프로젝트 이름</label>
+                        <input type="text" class="form-control" id="modalProjectName" name="modalProjectName">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalProjectStart" class="control-label">프로젝트 시작일</label>
+                        <input type="date" class="form-control" id="modalProjectStart" name="modalProjectStart">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalProjectEnd" class="control-label">프로젝트 완료일</label>
+                        <input type="date" class="form-control" id="modalProjectEnd" name="modalProjectEnd">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" id="completeProjectBtn">완료</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script src="/moment.js"></script>
+<script src="/gantt/js/jquery.fn.gantt.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/latest/js/bootstrap.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script src="/moment.js"></script>
+<script>
+    var taskId = 1;
+    var ganttData = {
+        ganttName: '<%= data.ganttName %>',
+        sourceData: [
+            <% for(var i = 0; i < data.project.length; i++) { %>
+            {
+                id: '<%= data.project[i]._id %>',
+                name: '<%= data.project[i].name %>',
+                desc: '',
+                values: [
+                    {
+                        from: new Date('<%= data.project[i].values[0].from %>').getTime(),
+                        to: new Date('<%= data.project[i].values[0].to %>').getTime(),
+                        label: '<%= data.project[i].values[0].label %>',
+                        dataObj: {
+                            parentId: '<%= data.project[i]._id %>'
+                        }
+                    }
+                ],
+                isCreated: false,
+                isProject: true,
+            },
+            <% if (data.project[i].task.length === 0) {%>
+            {
+                id: 0,
+                desc: 'add task',
+                values: [
+                    {}
+                ],
+                isCreated: false,
+                isProject: false,
+            },
+            <%}%>
+
+                <% for(var j=0; j < data.project[i].task.length; j++) {%>
+                {
+                    id: '<%= data.project[i].task[j]._id %>',
+                    name: '',
+                    desc: '<%= data.project[i].task[j].name %>',
+                    values: [
+                        {
+                            from: new Date('<%= data.project[i].task[j].values[0].from %>').getTime(),
+                            to: new Date('<%= data.project[i].task[j].values[0].to %>').getTime(),
+                            label: '<%= data.project[i].task[j].values[0].label %>',
+                            dataObj: {
+                                parentId: '<%= data.project[i].task[j]._id %>'
+                            }
+                        },
+                    ],
+                    isCreated: false,
+                    isProject: false
+                }
+                <% } %>
+            <% } %>
+        ]
+    }
+</script>
+<script src="/js/gantt_view.js"></script>
+</body>
+</html>
