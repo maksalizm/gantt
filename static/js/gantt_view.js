@@ -154,11 +154,6 @@
 
     $(document).on('click', '#addProject', function(e) {
         $('#create_project').modal('show');
-
-        // $(this).replaceWith('<div style="width:100%;height: 100%;position:relative;background=color:#ffffff;">' +
-        //     '<input id="projectName" style="width:80%;height: 100%;position:absolute;top:0;left:0;"/>' +
-        //     '<button style="padding:2px;position:absolute;top: 3px; right: 3px;" class="fa fa-plus" type="button" id="addGanttProjectBtn"></button>'+
-        //     '</div>')
     });
 
     $('#completeProjectBtn').on('click', function() {
@@ -205,7 +200,7 @@
         var beforeArray = sourceData.slice(projectIndex, projectIndex + sourceData[projectIndex].taskLength + 1);
         var afterArray = sourceData.slice(projectIndex + sourceData[projectIndex].taskLength + 1, sourceData.length);
 
-        processTaskData($taskElem, targetData.projectId);
+        processTaskData($taskElem, targetData.projectId, projectIndex);
         ++sourceData[projectIndex].taskLength;
         beforeArray.push({
             id: window.taskId,
@@ -219,7 +214,8 @@
                 }
             ],
             isCreated: true,
-            isProject: false
+            isProject: false,
+            projectId: targetData.projectId
         }, {
             id: window.taskId++,
             desc: 'add task',
@@ -230,14 +226,9 @@
             isProject: false,
         });
         sourceData = immutableArray.concat(beforeArray, afterArray);
-        ganttOptions.itemsPerPage = sourceData.length;
-        ganttOptions.source = sourceData;
-        $('#gantt').gantt(
-            ganttOptions
-        );
     });
 
-    function processTaskData($taskElem, projectId) {
+    function processTaskData($taskElem, projectId, projectIndex) {
         var ganttId = $('#gantt').data().id;
         var promise = $.ajax({
             method: 'post',
@@ -246,10 +237,16 @@
 
         });
         promise.then(function(data) {
-            var $targetParent = $taskElem.closest('.desc');
-            console.log($targetParent);
             if (data.success) {
-                $('#' +$taskElem.parents('.desc').attr('id')).data('id', data.taskId);
+                sourceData[
+                findDataByValue(sourceData, projectId) +
+                sourceData[findDataByValue(sourceData, projectId)].taskLength
+                    ].id = data.taskId;
+                ganttOptions.itemsPerPage = sourceData.length;
+                ganttOptions.source = sourceData;
+                $('#gantt').gantt(
+                    ganttOptions
+                );
             }
         });
     }
