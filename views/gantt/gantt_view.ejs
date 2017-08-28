@@ -33,20 +33,40 @@
         }
 
         .addTask, #addProject {
-            color: #2099bb;
-            text-decoration: underline;
+            color: #2099bb !important;
+            text-decoration: underline !important;
             font-weight: normal;
         }
         .addTask:hover, #addProject:hover {
             cursor: pointer;
         }
+        .fn-wide, .row.desc {
+            position: relative;
+            z-index: 1;
+        }
+        .delete-data {
+            display: none;
+            z-index: 5;
+        }
+        .delete-data:hover {
+            cursor: pointer;
+        }
+        .fn-wide:hover .delete-data, .row.desc:hover .delete-data {
+            position: absolute;
+            display: block;
+            top: 0;
+            right: 10px;
+            font-weight: bold;
+            color: #008489;
+        }
+
     </style>
     <script src="https://use.fontawesome.com/65b3798f54.js"></script>
 </head>
 <body>
 
-<p><%= data.ganttName %></p>
-<div class="gantt" id="gantt">
+<h1><%= data.ganttName %></h1>
+<div class="gantt" id="gantt" data-id="<%= data._id %>">
 </div>
 
 <div class="modal fade" id="create_project" tabindex="-1" role="dialog" aria-labelledby="create_project_ModalLabel">
@@ -112,39 +132,59 @@
                 isProject: true,
                 taskLength: '<%= data.project[i].task.length%>'
             },
-            <% if (data.project[i].task.length === 0) {%>
-            {
-                id: 0,
-                desc: 'add task',
-                values: [
-                    {}
-                ],
-                isCreated: false,
-                isProject: false,
-                taskLength: 0
-            },
-            <%}%>
+            <!--<% if (data.project[i].task.length === 0) {%>-->
+            <!--{-->
+                <!--id: 0,-->
+                <!--desc: 'add task',-->
+                <!--values: [-->
+                    <!--{}-->
+                <!--],-->
+                <!--isCreated: false,-->
+                <!--isProject: false,-->
+                <!--taskLength: 0-->
+            <!--},-->
+            <!--<%}%>-->
 
                 <% for(var j=0; j < data.project[i].task.length; j++) {%>
                 {
                     id: '<%= data.project[i].task[j]._id %>',
                     name: '',
-                    desc: '<%= data.project[i].task[j].name %>',
+                    desc: '<%= data.project[i].task[j].desc %>',
                     values: [
                         {
-                            from: new Date('<%= data.project[i].task[j].values[0].from %>').getTime(),
-                            to: new Date('<%= data.project[i].task[j].values[0].to %>').getTime(),
-                            label: '<%= data.project[i].task[j].values[0].label %>',
+                            <% if (data.project[i].task[j].values[0].from) { %>
+                                from: new Date('<%= data.project[i].task[j].values[0].from %>').getTime(),
+                            <%}%>
+                            <% if (data.project[i].task[j].values[0].to) { %>
+                                to: new Date('<%= data.project[i].task[j].values[0].to %>').getTime(),
+                            <%}%>
+                            <% if (data.project[i].task[j].values[0].from && data.project[i].task[j].values[0].to) { %>
+                                label: '<%= data.project[i].task[j].values[0].label %>',
+                            <%}%>
                             dataObj: {
                                 parentId: '<%= data.project[i].task[j]._id %>',
                             }
                         },
                     ],
                     projectId: '<%= data.project[i]._id %>',
-                    isCreated: false,
+                    <% if (data.project[i].task[j].values[0].from && data.project[i].task[j].values[0].to) { %>
+                        isCreated: false,
+                    <% } else { %>
+                        isCreated: true,
+                    <% } %>
                     isProject: false
-                }
+                },
                 <% } %>
+                {
+                    id: 0,
+                    desc: 'add task',
+                    values: [
+                        {}
+                    ],
+                    isCreated: false,
+                    isProject: false,
+                    taskLength: 0
+                }
             <% } %>
         ]
     }

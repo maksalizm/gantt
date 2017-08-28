@@ -1,5 +1,11 @@
 (function($) {
     $('#create_gantt').modal('show');
+
+    $("#create_project").on('hidden.bs.modal', function() {
+        $('#modalProjectName').val('');
+        $('#modalProjectStart').val('');
+        $('#modalProjectEnd').val('');
+    })
     var $completeGanttBtn = $('#completeGanttBtn');
     var sourceData = window.ganttData.sourceData;
     var ganttOptions = {
@@ -36,7 +42,6 @@
                 }
             });
 
-
             $('.gantt').gantt({
                 source: self.source,
                 dow: self.dow,
@@ -47,7 +52,7 @@
                 onAddClick: self.onAddClick,
                 onRender: self.onRender,
                 onItemClick: self.onItemClick
-            })
+            });
         },
         onDeleteClick: function (dt) {
 
@@ -55,7 +60,7 @@
         onAddClick: function (e, dt, rowId) {
             var self = this;
             this.source.forEach(function (data, index, array) {
-                if (data.id === rowId && !data.isCreated && array[index - 1].values[0].to > dt) {
+                if (data.id === rowId && !data.isCreated && array[index].values[0].from < dt) {
                     data.values[0].to = dt;
                     $('.gantt').gantt({
                         source: self.source,
@@ -67,15 +72,13 @@
                         onAddClick: self.onAddClick,
                         onRender: self.onRender,
                         onItemClick: self.onItemClick
-                    })
-                }
-                else if (+data.id === rowId && data.isCreated) {
+                    });
+                } else if ("" + data.id === "" + rowId && data.isCreated) {
                     if (!data.values[0].from) {
                         var $taskElem = $('#RowdId_'+ index) || '';
                         var $projectElem = $('#rowheader' + index) || '';
                         var top = $projectElem.data().offset + 24 * 4 + 3;
                         var $pin = $('<i id="map_pin" class="fa fa-map-pin" aria-hidden="true"/>');
-                        // elementFromPoint
                         var left = $('#dh-' + dt).data().offset;
                         $pin.css({
                             top: top,
@@ -89,7 +92,7 @@
                         } else {
                             data.values[0].label = $projectElem.text();
                         }
-                    } else {
+                    } else if(array[index].values[0].from < dt) {
                         data.values[0].to = dt;
                         $('#map_pin').remove();
                         $('.gantt').gantt({
@@ -102,46 +105,33 @@
                             onAddClick: self.onAddClick,
                             onRender: self.onRender,
                             onItemClick: self.onItemClick
-                        })
+                        });
                     }
                 }
-            })
+            });
         },
         onRender: function () {
-            // var self = this;
-            // $(document).off('click.addGantEvent', '#addGanttBtn');
-            // $(document).on('click.addGantEvent', '#addGanttBtn', function () {
-            //     var taskName = $('#taskName').val();
-            //     var taskDesc = $('#taskDesc').val();
-            //     sourceData.push({
-            //         id: ++currentDataId + '',
-            //         name: taskName,
-            //         desc: taskDesc,
-            //         values: [{}],
-            //         canEdit: 'false',
-            //         isCreated: true
-            //     })
-            //     sourceData.push({
-            //         id: ++currentDataId,
-            //         name: '파트너 작업 진행 상황',
-            //         desc: '파트너 작업',
-            //        values: [{}],
-            //         isCreated: true
-            //     })
-            //     $('.gantt').gantt({
-            //         source: self.source,
-            //         dow: self.dow,
-            //         navigate: self.navigate,
-            //         scale: self.scale,
-            //         maxScale: self.maxScale,
-            //         itemsPerPage: sourceData.length,
-            //         onAddClick: self.onAddClick,
-            //         onRender: self.onRender,
-            //         onItemClick: self.onItemClick
-            //     })
-            // })
+
         }
     };
+
+    function processTaskDate(data) {
+        var projectId = data.projectId;
+        var taskId = data.taskId;
+        var taskTo = data.to;
+        var ganttId = $('#gantt').data().id;
+        $.ajax({
+            method: 'post',
+            url: '/gantt/' + ganttId,
+            data: {taskId: taskId, projectId: projectId, taskTo: taskTo},
+            success: function (data) {
+                if (data) {
+                    console.log(data);
+                }
+            }
+        });
+    }
+
     $('#gantt').gantt(
         ganttOptions
     );
@@ -159,7 +149,7 @@
         $self.replaceWith('<div style="width:100%;height: 100%;position:relative;background=color:#ffffff;">' +
             '<input style="width:80%;height: 100%;position:absolute;top:0;left:0;" id="taskName"/>' +
             '<button style="padding:2px;position:absolute;top: 3px; right: 3px;" class="fa fa-plus" data-project-id="'+projectId+'" type="button" id="addGanttTaskBtn"></button>'+
-            '</div>')
+            '</div>');
     });
 
     $(document).on('click', '#addProject', function(e) {
@@ -215,6 +205,7 @@
         var beforeArray = sourceData.slice(projectIndex, projectIndex + sourceData[projectIndex].taskLength + 1);
         var afterArray = sourceData.slice(projectIndex + sourceData[projectIndex].taskLength + 1, sourceData.length);
 
+        processTaskData($taskElem, targetData.projectId);
         ++sourceData[projectIndex].taskLength;
         beforeArray.push({
             id: window.taskId,
@@ -245,6 +236,23 @@
             ganttOptions
         );
     });
+
+    function processTaskData($taskElem, projectId) {
+        var ganttId = $('#gantt').data().id;
+        var promise = $.ajax({
+            method: 'post',
+            url: '/gantt/' + ganttId,
+            data: {taskName: $taskElem.val(), projectId: projectId},
+
+        });
+        promise.then(function(data) {
+            var $targetParent = $taskElem.closest('.desc');
+            console.log($targetParent);
+            if (data.success) {
+                $('#' +$taskElem.parents('.desc').attr('id')).data('id', data.taskId);
+            }
+        });
+    }
     $(document).on('click', '#addGanttProjectBtn', function() {
         var $taskElem = $('#projectName');
         sourceData.push({
@@ -266,52 +274,21 @@
         $('#gantt').gantt(
             ganttOptions
         );
-    })
-    // setTimeout(function() {
-    //   $('.leftPanel').append('<p>add task</p>')
-    // },0);
-    // $completeGanttBtn.on('click', function() {
-    //     var formData = {};
-    //     var $createGanttInputGroup = $('#createGantt').find('input');
-    //     $createGanttInputGroup.each(function(index, elem){
-    //         var $target = $(elem);
-    //         formData[$target.attr('name')] = $target.val();
-    //     });
-    //     console.log(formData);
-    //     $.ajax({
-    //         method: 'post',
-    //         data: formData,
-    //         success: function(data) {
-    //             sourceData.push({
-    //                 name: data.project.projectName,
-    //             });
-    //             var ganttObj = {};
-    //             console.log(data);
-    //             // sourceData = data.task;
-    //             ganttObj.id = data._id;
-    //             ganttObj.name = '';
-    //             ganttObj.desc = data.project.task[0].desc;
-    //             ganttObj.values = [];
-    //             var values = {
-    //                 from : new Date(data.project.task[0].values[0].from).getTime(),
-    //                 to: new Date(data.project.task[0].values[0].to).getTime(),
-    //                 label: data.project.task[0].values[0].label,
-    //                 customClass: "ganttRed",
-    //                 dataObj: {
-    //                     parentId : data.project._id
-    //                 }
-    //             };
-    //             ganttObj.values.push(values);
-    //             sourceData.push(ganttObj);
-    //             ganttOptions.itemsPerPage = 10;
-    //             $('#ganttName').text(data.ganttName);
-    //             $('#gantt').gantt(
-    //                 ganttOptions
-    //             )
-    //         }
-    //     })
-    // })
-
+    });
+    $(document).on('click', '.delete-data', function(e) {
+        var $rowParentElem = $(e.target).closest('.row');
+        var dataList = $rowParentElem.data();
+        var parentId = dataList.id;
+        var targetIndex = findDataByValue(sourceData, parentId);
+        if ($rowParentElem.hasClass('name')) {
+            sourceData.splice(targetIndex, targetIndex + sourceData[targetIndex].taskLength + 1);
+        } else {
+            sourceData.splice(targetIndex, 1);
+        }
+        $('#gantt').gantt(
+            ganttOptions
+        );
+    });
 
     function findDataByValue(arr, value) {
         var arrLength = arr.length;

@@ -158,7 +158,6 @@ app.get('/gantt/:ganttId', (req, res) => {
         if (err) {
             console.log(err);
         }
-        console.log(data);
         res.render('gantt/gantt_view', { data: data});
     })
 });
@@ -178,21 +177,32 @@ app.post('/gantt/:ganttId', (req, res) => {
             })
         },
         function(data, callback) {
-            var task = _.find(data.task, function(data){
-                if (''+data._id === req.body.dataId) {
-                    return data;
-                }
+            // var task = _.find(data.task, function(data){
+            //     if (''+data._id === req.body.dataId) {
+            //         return data;
+            //     }
+            // });
+            var project = data.project.find(function(project) {
+                return project._id.equals(req.body.projectId);
             });
-            var requestData = {};
-            _.extend(requestData, JSON.parse(req.body.values));
-            task.values[0].to = requestData.to;
-            console.log(requestData.to);
-            console.log(task.values[0].to);
+            project.task.push({
+                desc: req.body.taskName,
+                values: [{
+                    from: '',
+                    to: '',
+                    label: req.body.taskName
+                }]
+            });
             data.save((err, result) => {
                 if (err) {
                     console.log(err);
                 }
-                res.send({success: true});
+
+                project = result.project.find(function(project) {
+                    return project._id.equals(req.body.projectId);
+                });
+
+                res.send({success: true, taskId: project.task[project.task.length-1]._id});
             });
         }
     ]);

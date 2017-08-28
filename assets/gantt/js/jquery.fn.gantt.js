@@ -329,35 +329,9 @@
                         // edit : maksalizm
                         var addClass;
                         if (entry.desc === 'add task') {
-                            addClass = 'addTask'
+                            addClass = 'addTask';
                         }
                         entries.push((function(){
-                            // console.log();
-                            // if (element.data.length >= i + 2 && !element.data[i+1].desc) {
-                            //     return'<div class="row name row' + i +
-                            //         (entry.desc ? '' : (' fn-wide ' + dataId)) +
-                            //         '" id="rowheader' + i +
-                            //         '" data-offset="' + i % settings.itemsPerPage * tools.getCellSize() + '">' +
-                            //         '<span class="fn-label' +
-                            //         (entry.cssClass ? ' ' + entry.cssClass : '') + '">' +
-                            //         (entry.name || '') +
-                            //         '</span>' +
-                            //         '</div>' +
-                            //         '<div class="row name' + (i + 1) + '" id="rowheader' + (i+1)+'" data-offset="' + (i+1) % settings.itemsPerPage * tools.getCellSize()+ '"></div><div class="row desc"><span class="fn-label addTask">add task</span></div>'
-                            // } else if (element.data.length === 1) {
-                            //     return '<div class="row name row' + i +
-                            //         (entry.desc ? '' : (' fn-wide ' + dataId)) +
-                            //         '" id="rowheader' + i +
-                            //         '" data-offset="' + i % settings.itemsPerPage * tools.getCellSize() + '">' +
-                            //         '<span class="fn-label' +
-                            //         (entry.cssClass ? ' ' + entry.cssClass : '') + '">' +
-                            //         (entry.name || '') +
-                            //         '</span>' +
-                            //         '</div>' +
-                            //         '<div class="row name row1" id="rowheader1" data-offset="'+settings.itemsPerPage * tools.getCellSize()+'"></div><div class="row desc"><span class="fn-label addTask">add task</span></div>'
-                            // }
-
-
                            return '<div class="row name row' + i +
                             (entry.desc ? '' : (' fn-wide '+dataId)) +
                             '" id="rowheader' + i +
@@ -366,7 +340,8 @@
                             (entry.cssClass ? ' ' + entry.cssClass : '') + '">' +
                             (entry.name || '') +
                             '</span>' +
-                            '</div>'
+                               '<span class="delete-data">&times;</span>' +
+                            '</div>';
                         }()));
 
                         if (entry.desc) {
@@ -378,7 +353,7 @@
                                         (entry.cssClass ? ' ' + entry.cssClass : '') + ' ' + addClass + '">' +
                                         entry.desc +
                                         '</span>' +
-                                        '</div>'
+                                        '</div>';
                                 }
                                 return '<div class="row desc row' + i +
                                 '" id="RowdId_' + i + dataId + '">' +
@@ -386,7 +361,8 @@
                                 (entry.cssClass ? ' ' + entry.cssClass : '') + '">' +
                                 entry.desc +
                                 '</span>' +
-                                '</div>'
+                                    '<span class="delete-data">&times;</span>' +
+                                '</div>';
                             })());
                         }
 
@@ -1013,6 +989,8 @@
             // custom edit: maksalizm
             createProgressBar: function (label, desc, classNames, dataObj) {
                 label = label || "";
+                var pattern = /[^(가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9)]/gi;
+                label = label.replace(pattern, "");
                 var bar = $('<div class="bar"><div class="fn-label">' + label + '</div></div>')
                         .data("dataObj", dataObj);
                 if (desc) {
@@ -1218,7 +1196,6 @@
                                 cFrom = from.data("offset");
                                 dl = Math.floor((dTo - dFrom) / UTC_DAY_IN_MS) + 1;
                                 dp = 100 * (cellWidth * dl - 1) / dataPanelWidth;
-
                                 _bar = core.createProgressBar(day.label, day.desc, day.customClass, day.dataObj, dTo);
 
                                 // find row
