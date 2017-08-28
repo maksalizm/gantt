@@ -83,9 +83,9 @@ passport.use('local.login', new LocalStrategy({
 }));
 
 
-app.get('/', (req, res) => {
-    res.render('../index', {gantt: false});
-});
+// app.get('/', (req, res) => {
+//     res.render('../index', {gantt: false});
+// });
 
 app.get('/signup', (req, res) => {
     res.render('signup');
@@ -107,23 +107,21 @@ app.post('/login', passport.authenticate('local.login', {
     failureFlash: false
 }));
 
-app.get('/gantt/create', (req, res) => {
+app.get('/', (req, res) => {
     res.render('gantt/create_gantt');
 });
 
-app.post('/gantt/create', (req, res) => {
+app.post('/', (req, res) => {
     console.log(req.body);
     async.waterfall([
         function (callback) {
             var gantt = new Gantt();
             gantt.ganttName = req.body.ganttName;
-
-
             gantt.save((err, data) => {
-                callback(err, data, gantt.project.length);
+                callback(err, data);
             })
         },
-        function (data, ganttProjectLength, callback) {
+        function (data, callback) {
             Gantt.update(
                 {
                     _id: data._id
@@ -147,9 +145,8 @@ app.post('/gantt/create', (req, res) => {
                     if (err) {
                         console.log(err);
                     }
-                    Gantt.findOne({_id: data._id}, (err, result) => {
-                        res.send(result);
-                    });
+                    console.log(1);
+                    res.redirect('/gantt/' + data._id);
                 }
             )
         }

@@ -144,37 +144,37 @@
             formData[$target.attr('name')] = $target.val();
         });
         console.log(formData);
-        $.ajax({
-            method: 'post',
-            data: formData,
-            success: function(data) {
-                sourceData.push({
-                    name: data.project.projectName,
-                });
-                var ganttObj = {};
-                console.log(data);
-                // sourceData = data.task;
-                ganttObj.id = data._id;
-                ganttObj.name = '';
-                ganttObj.desc = data.project.task[0].desc;
-                ganttObj.values = [];
-                var values = {
-                    from : new Date(data.project.task[0].values[0].from).getTime(),
-                    to: new Date(data.project.task[0].values[0].to).getTime(),
-                    label: data.project.task[0].values[0].label,
-                    customClass: "ganttRed",
-                    dataObj: {
-                        parentId : data.project._id
-                    }
-                };
-                ganttObj.values.push(values);
-                sourceData.push(ganttObj);
-                ganttOptions.itemsPerPage = 10;
-                $('#ganttName').text(data.ganttName);
-                $('#gantt').gantt(
-                    ganttOptions
-                )
-            }
-        })
+        // $.ajax({
+        //     method: 'post',
+        //     data: formData,
+        //     success: function(data) {
+        //         sourceData.push({
+        //             name: data.project.projectName,
+        //         });
+        //         var ganttObj = {};
+        //         console.log(data);
+        //         // sourceData = data.task;
+        //         ganttObj.id = data._id;
+        //         ganttObj.name = '';
+        //         ganttObj.desc = data.project.task[0].desc;
+        //         ganttObj.values = [];
+        //         var values = {
+        //             from : new Date(data.project.task[0].values[0].from).getTime(),
+        //             to: new Date(data.project.task[0].values[0].to).getTime(),
+        //             label: data.project.task[0].values[0].label,
+        //             customClass: "ganttRed",
+        //             dataObj: {
+        //                 parentId : data.project._id
+        //             }
+        //         };
+        //         ganttObj.values.push(values);
+        //         sourceData.push(ganttObj);
+        //         ganttOptions.itemsPerPage = 10;
+        //         $('#ganttName').text(data.ganttName);
+        //         $('#gantt').gantt(
+        //             ganttOptions
+        //         )
+        //     }
+        // })
     })
 }(jQuery));
