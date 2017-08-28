@@ -185,7 +185,7 @@
                     },
                     label: $('#modalProjectName').val(),
                     taskLength: 0,
-                    isProject: true,
+                    isProject: true
                 }
             ],
             isCreated: true,
@@ -198,7 +198,7 @@
                 {}
             ],
             isCreated: false,
-            isProject: false,
+            isProject: false
         });
         ganttOptions.itemsPerPage = sourceData.length;
         $('#gantt').gantt(
