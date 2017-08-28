@@ -132,18 +132,6 @@
                 isProject: true,
                 taskLength: '<%= data.project[i].task.length%>'
             },
-            <!--<% if (data.project[i].task.length === 0) {%>-->
-            <!--{-->
-                <!--id: 0,-->
-                <!--desc: 'add task',-->
-                <!--values: [-->
-                    <!--{}-->
-                <!--],-->
-                <!--isCreated: false,-->
-                <!--isProject: false,-->
-                <!--taskLength: 0-->
-            <!--},-->
-            <!--<%}%>-->
 
                 <% for(var j=0; j < data.project[i].task.length; j++) {%>
                 {
@@ -184,7 +172,7 @@
                     isCreated: false,
                     isProject: false,
                     taskLength: 0
-                }
+                },
             <% } %>
         ]
     }

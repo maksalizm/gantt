@@ -167,43 +167,70 @@ app.post('/gantt/:ganttId', (req, res) => {
         function(callback) {
             Gantt.findOne({_id: req.params.ganttId}, (err, data) => {
                 callback(err, data);
-                // data.task.values.push(data);
-                // data.task.values.save((err, data) => {
-                //     if (err) {
-                //         console.log(err);
-                //     }
-                //     res.send({success: true});
-                // });
             })
         },
         function(data, callback) {
-            // var task = _.find(data.task, function(data){
-            //     if (''+data._id === req.body.dataId) {
-            //         return data;
-            //     }
-            // });
-            var project = data.project.find(function(project) {
-                return project._id.equals(req.body.projectId);
-            });
-            project.task.push({
-                desc: req.body.taskName,
-                values: [{
-                    from: '',
-                    to: '',
-                    label: req.body.taskName
-                }]
-            });
-            data.save((err, result) => {
-                if (err) {
-                    console.log(err);
-                }
-
-                project = result.project.find(function(project) {
+            if (req.body.dataType === 'newProject') {
+                data.project.push({
+                    name: req.body.projectName,
+                });
+                data.project[data.project.length-1].values.push({
+                    from: req.body.from,
+                    to: req.body.to,
+                    label: req.body.projectName
+                });
+                data.save((err) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    res.send({projectId: data.project[data.project.length-1]._id});
+                });
+            } else if (req.body.dataUpdate !== 'true') {
+                var project = data.project.find(function (project) {
                     return project._id.equals(req.body.projectId);
                 });
-
-                res.send({success: true, taskId: project.task[project.task.length-1]._id});
-            });
+                project.task.push({
+                    desc: req.body.taskName,
+                    values: [{
+                        from: '',
+                        to: '',
+                        label: req.body.taskName
+                    }]
+                });
+                data.save((err, result) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    res.send({success: true, taskId: project.task[project.task.length - 1]._id});
+                });
+            } else {
+                var project = data.project.find(function (project) {
+                    return project._id.equals(req.body.projectId);
+                });
+                if (req.body.isProject === 'true') {
+                    project.values[0].to = req.body.to;
+                } else {
+                    if (req.body.dataType === 'from') {
+                        project.task.find(function (task) {
+                            if (task._id.equals(req.body.taskId)) {
+                                task.values[0].from = req.body.from;
+                            }
+                        });
+                    } else {
+                        project.task.find(function (task) {
+                            if (task._id.equals(req.body.taskId)) {
+                                task.values[0].to = req.body.to;
+                            }
+                        });
+                    }
+                }
+                data.save((err, result) => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    res.send({success: true});
+                });
+            }
         }
     ]);
 });
@@ -244,7 +271,42 @@ app.post('/gantt/update/:ganttId', (req, res) => {
     ])
 });
 
-app.delete('/gantt/update/:ganttId', (req, res) => {
+app.delete('/gantt/:ganttId', (req, res) => {
+    console.log(req.body);
+    Gantt.findOne({_id: req.params.ganttId}, (err, data) => {
+        if (req.body.isProject === 'true') {
+            data.project.forEach(function(project) {
+                if (project._id.equals(req.body.projectId)) {
+                    project.remove();
+                }
+            });
+            data.save((err) => {
+                if (err) {
+                    console.log(err);
+                }
+                res.send({success: true})
+            })
+        } else {
+            data.project.forEach(function(project) {
+                if (project._id.equals(req.body.projectId)) {
+                    project.task.forEach(function(task){
+                        console.log(1);
+                        console.log(req.body.taskId);
+                        if(task._id.equals(req.body.taskId)) {
+                            console.log(2);
+                            task.remove();
+                        }
+                    });
+                }
+            });
+            data.save((err) => {
+                if (err) {
+                    console.log(err);
+                }
+                res.send({success: true})
+            })
+        }
+    })
 
 });
 

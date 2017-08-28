@@ -59,6 +59,7 @@
         },
         onAddClick: function (e, dt, rowId) {
             var self = this;
+            var ganttId = $('#gantt').data().id;
             this.source.forEach(function (data, index, array) {
                 if (data.id === rowId && !data.isCreated && array[index].values[0].from < dt) {
                     data.values[0].to = dt;
@@ -73,6 +74,30 @@
                         onRender: self.onRender,
                         onItemClick: self.onItemClick
                     });
+                    if (data.isProject) {
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: rowId,
+                                to: dt,
+                                isProject: true
+                            }
+                        });
+                    } else {
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: rowId,
+                                to: dt,
+                                isProject: false
+                            }
+                        });
+                    }
                 } else if ("" + data.id === "" + rowId && data.isCreated) {
                     if (!data.values[0].from) {
                         var $taskElem = $('#RowdId_'+ index) || '';
@@ -92,6 +117,18 @@
                         } else {
                             data.values[0].label = $projectElem.text();
                         }
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: rowId,
+                                from: dt,
+                                dataType: 'from',
+                                isProject: false
+                            }
+                        });
                     } else if(array[index].values[0].from < dt) {
                         data.values[0].to = dt;
                         $('#map_pin').remove();
@@ -105,6 +142,18 @@
                             onAddClick: self.onAddClick,
                             onRender: self.onRender,
                             onItemClick: self.onItemClick
+                        });
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: rowId,
+                                to: dt,
+                                isProject: false,
+                                dataType: 'to'
+                            }
                         });
                     }
                 }
@@ -157,39 +206,52 @@
     });
 
     $('#completeProjectBtn').on('click', function() {
-        sourceData.push({
-            id: window.taskId,
-            name: $('#modalProjectName').val(),
-            desc: '',
-            values: [
-                {
-                    from: $('#modalProjectStart').val(),
-                    to: $('#modalProjectEnd').val(),
-                    dataObj: {
-                        parentId: window.taskId++
-                    },
-                    label: $('#modalProjectName').val(),
-                    taskLength: 0,
-                    isProject: true
-                }
-            ],
-            isCreated: true,
-            isProject: true,
-            taskLength: 0
-        }, {
-            id: window.taskId++,
-            desc: 'add task',
-            values: [
-                {}
-            ],
-            isCreated: false,
-            isProject: false
+        var ganttId = $('#gantt').data().id;
+        $.ajax({
+            method: 'post',
+            url: '/gantt/' + ganttId,
+            data: {
+                projectName: $('#modalProjectName').val(),
+                from: $('#modalProjectStart').val(),
+                to: $('#modalProjectEnd').val(),
+                dataType: 'newProject'
+            },
+            success: function(data) {
+                sourceData.push({
+                    id: data.projectId,
+                    name: $('#modalProjectName').val(),
+                    desc: '',
+                    values: [
+                        {
+                            from: $('#modalProjectStart').val(),
+                            to: $('#modalProjectEnd').val(),
+                            dataObj: {
+                                parentId: data.projectId
+                            },
+                            label: $('#modalProjectName').val(),
+                            taskLength: 0,
+                            isProject: true
+                        }
+                    ],
+                    isCreated: true,
+                    isProject: true,
+                    taskLength: 0
+                }, {
+                    id: window.taskId++,
+                    desc: 'add task',
+                    values: [
+                        {}
+                    ],
+                    isCreated: false,
+                    isProject: false
+                });
+                ganttOptions.itemsPerPage = sourceData.length;
+                $('#gantt').gantt(
+                    ganttOptions
+                );
+                $('#create_project').modal('hide');
+            }
         });
-        ganttOptions.itemsPerPage = sourceData.length;
-        $('#gantt').gantt(
-            ganttOptions
-        );
-        $('#create_project').modal('hide');
     });
 
     $(document).on('click', '#addGanttTaskBtn', function() {
@@ -233,8 +295,7 @@
         var promise = $.ajax({
             method: 'post',
             url: '/gantt/' + ganttId,
-            data: {taskName: $taskElem.val(), projectId: projectId},
-
+            data: {taskName: $taskElem.val(), projectId: projectId, dataUpdate: false}
         });
         promise.then(function(data) {
             if (data.success) {
@@ -273,14 +334,33 @@
         );
     });
     $(document).on('click', '.delete-data', function(e) {
+        var ganttId = $('#gantt').data().id;
         var $rowParentElem = $(e.target).closest('.row');
         var dataList = $rowParentElem.data();
         var parentId = dataList.id;
         var targetIndex = findDataByValue(sourceData, parentId);
         if ($rowParentElem.hasClass('name')) {
             sourceData.splice(targetIndex, targetIndex + sourceData[targetIndex].taskLength + 1);
+            $.ajax({
+                url: '/gantt/' + ganttId,
+                method: 'delete',
+                data: {
+                    isProject: true,
+                    projectId: parentId
+                }
+            });
         } else {
-            sourceData.splice(targetIndex, 1);
+            var task = sourceData.splice(targetIndex, 1);
+            console.log(task);
+            $.ajax({
+                url: '/gantt/' + ganttId,
+                method: 'delete',
+                data: {
+                    isProject: false,
+                    taskId: parentId,
+                    projectId: task[0].projectId
+                }
+            });
         }
         $('#gantt').gantt(
             ganttOptions
