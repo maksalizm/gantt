@@ -15,7 +15,7 @@ var Gantt = require('./models/gantt');
 var app = express();
 
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost/gannt');
+mongoose.connect('mongodb://maksalizm:pms794613@ds161913.mlab.com:61913/gantt');
 
 app.use(express.static('static'));
 app.use(express.static('assets'));
