@@ -8,6 +8,7 @@
     <title>Document</title>
     <link href="/gantt/css/bootstrap.css" rel="stylesheet" type="text/css">
     <link href="/gantt/css/style.css" type="text/css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.css" type="text/css" rel="stylesheet">
 </head>
 <body>
 <!--<form method="post">-->
@@ -65,11 +66,11 @@
                         <!--</div>-->
                         <div class="form-group">
                             <label for="projectStart" class="control-label">프로젝트 시작일</label>
-                            <input type="date" class="form-control" id="projectStart" name="projectStart">
+                            <input type="text" class="form-control dataPicker" id="projectStart" name="projectStart">
                         </div>
                         <div class="form-group">
                             <label for="projectEnd" class="control-label">프로젝트 완료일</label>
-                            <input type="date" class="form-control" id="projectEnd" name="projectEnd">
+                            <input type="text" class="form-control dataPicker" id="projectEnd" name="projectEnd">
                         </div>
                 </div>
                 <div class="modal-footer">
@@ -82,6 +83,7 @@
 </div>
 <script src="/jquery.min.js"></script>
 <script src="/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.js"></script>
 <script src="/moment.js"></script>
 <script src="/gantt/js/jquery.fn.gantt.js"></script>
 <script src="/js/gantt_create.js"></script>

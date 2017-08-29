@@ -287,12 +287,9 @@
         var $taskElem = $('#taskName');
         var targetData = $(this).data();
         var projectIndex = findDataByValue(sourceData, targetData.projectId);
-        var immutableArray = sourceData.slice(0, projectIndex);
-        var beforeArray = sourceData.slice(projectIndex, projectIndex + sourceData[projectIndex].taskLength + 1);
-        var afterArray = sourceData.slice(projectIndex + sourceData[projectIndex].taskLength + 1, sourceData.length);
-
+        var beforeArray = sourceData.slice(0, projectIndex + parseInt(sourceData[projectIndex].taskLength, 10) + 1);
+        var afterArray = sourceData.slice(projectIndex + parseInt(sourceData[projectIndex].taskLength, 10) + 1, sourceData.length);
         processTaskData($taskElem, targetData.projectId, projectIndex);
-        ++sourceData[projectIndex].taskLength;
         beforeArray.push({
             id: window.taskId,
             name: '',
@@ -316,7 +313,8 @@
             isCreated: false,
             isProject: false,
         });
-        sourceData = immutableArray.concat(beforeArray, afterArray);
+        ++sourceData[projectIndex].taskLength;
+        sourceData = beforeArray.concat(afterArray);
     });
 
     function processTaskData($taskElem, projectId, projectIndex) {
@@ -327,11 +325,11 @@
             data: {taskName: $taskElem.val(), projectId: projectId, dataUpdate: false}
         });
         promise.then(function(data) {
+            var targetIndex = findDataByValue(sourceData, projectId) +
+                parseInt(sourceData[findDataByValue(sourceData, projectId)].taskLength,10);
             if (data.success) {
-                sourceData[
-                findDataByValue(sourceData, projectId) +
-                sourceData[findDataByValue(sourceData, projectId)].taskLength
-                    ].id = data.taskId;
+                sourceData[targetIndex].id = data.taskId;
+                sourceData[targetIndex].values[0].dataObj.parentId = data.taskId;
                 ganttOptions.itemsPerPage = sourceData.length;
                 ganttOptions.source = sourceData;
                 $('#gantt').gantt(
@@ -403,4 +401,59 @@
             }
         }
     }
+
+    $(document).on('click', '.fn-label', function(e) {
+        var $target = $(e.target);
+        var input = $(document.createElement('input'));
+        if ($target.attr('id') === 'addProject' || $target.hasClass('addTask')) {
+            return false;
+        }
+        input.css({width: '80%', height: '100%'});
+        input.val($target.text());
+        input.addClass('edit-content');
+        $target.replaceWith(input);
+    });
+    $(document).on('keyup', '.edit-content', function(e){
+        var ganttId = $('#gantt').data().id;
+        var keyCode = $(e.keyCode);
+        var $target = $(e.target);
+        var targetId = $target.closest('.row').data().id;
+        if (keyCode[0] === 13) {
+            if ($target.closest('.row').hasClass('name')) {
+                sourceData[findDataByValue(sourceData, targetId)].name = $target.val();
+                $.ajax({
+                    method: 'patch',
+                    url: '/gantt/' + ganttId + '/project-title/',
+                    data: {
+                        projectTitle: $target.val(),
+                        projectId: sourceData[findDataByValue(sourceData, targetId)].id
+                    }
+                });
+            } else {
+                sourceData[findDataByValue(sourceData, targetId)].desc = $target.val();
+                $.ajax({
+                    method: 'patch',
+                    url: '/gantt/' + ganttId + '/task-title/',
+                    data: {
+                        taskTitle: $target.val(),
+                        projectId: sourceData[findDataByValue(sourceData, targetId)].projectId,
+                        taskId: sourceData[findDataByValue(sourceData, targetId)].id
+                    }
+                });
+            }
+            ganttOptions.source = sourceData;
+            $('#gantt').gantt(
+                ganttOptions
+            );
+        }
+    });
+    $('#modalProjectStart').datepicker({});
+    $('#modalProjectStart').on('changeDate', function (ev) {
+        $(this).datepicker('hide');
+    });
+    $('#modalProjectEnd').datepicker({});
+    $('#modalProjectEnd').on('changeDate', function (ev) {
+        $(this).datepicker('hide');
+    });
+
 }(jQuery));

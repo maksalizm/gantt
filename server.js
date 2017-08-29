@@ -305,6 +305,45 @@ app.delete('/gantt/:ganttId', (req, res) => {
 
 });
 
+app.patch('/gantt/:ganttId/project-title/', (req, res) => {
+    Gantt.findOne({_id: req.params.ganttId}, (err, data) => {
+        data.project.forEach(function(project) {
+            if (project._id.equals(req.body.projectId)) {
+                project.name = req.body.projectTitle;
+            }
+        });
+        data.save((err) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log('1');
+            res.send({success: true})
+        })
+    })
+});
+
+app.patch('/gantt/:ganttId/task-title/', (req, res) => {
+    Gantt.findOne({_id: req.params.ganttId}, (err, data) => {
+        data.project.forEach(function (project) {
+            if (project._id.equals(req.body.projectId)) {
+                project.task.forEach(function (task) {
+                    if (task._id.equals(req.body.taskId)) {
+                        task.desc = req.body.taskTitle;
+                        task.values[0].label = req.body.taskTitle;
+                    }
+                })
+            }
+        });
+        data.save((err) => {
+            if (err) {
+                console.log(err);
+            }
+            console.log('2');
+            res.send({success: true})
+        })
+    })
+});
+
 app.get('/gantt/', (req, res) => {
     Gantt.find({}, (err, data) => {
         res.render('gantt/gantt_list', {data: data})
