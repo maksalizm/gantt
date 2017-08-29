@@ -113,7 +113,6 @@ app.get('/', (req, res) => {
 });
 
 app.post('/', (req, res) => {
-    console.log(req.body);
     async.waterfall([
         function (callback) {
             var gantt = new Gantt();
@@ -146,7 +145,6 @@ app.post('/', (req, res) => {
                     if (err) {
                         console.log(err);
                     }
-                    console.log(1);
                     res.redirect('/gantt/' + data._id);
                 }
             )
@@ -273,7 +271,6 @@ app.post('/gantt/update/:ganttId', (req, res) => {
 });
 
 app.delete('/gantt/:ganttId', (req, res) => {
-    console.log(req.body);
     Gantt.findOne({_id: req.params.ganttId}, (err, data) => {
         if (req.body.isProject === 'true') {
             data.project.forEach(function(project) {
@@ -291,10 +288,7 @@ app.delete('/gantt/:ganttId', (req, res) => {
             data.project.forEach(function(project) {
                 if (project._id.equals(req.body.projectId)) {
                     project.task.forEach(function(task){
-                        console.log(1);
-                        console.log(req.body.taskId);
                         if(task._id.equals(req.body.taskId)) {
-                            console.log(2);
                             task.remove();
                         }
                     });

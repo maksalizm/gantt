@@ -6,7 +6,6 @@
         $('#modalProjectStart').val('');
         $('#modalProjectEnd').val('');
     })
-    var $completeGanttBtn = $('#completeGanttBtn');
     var sourceData = window.ganttData.sourceData;
     var ganttOptions = {
         source: sourceData,
@@ -18,40 +17,87 @@
         itemsPerPage: sourceData.length,
         onItemClick: function (dataObj, dt) {
             var self = this;
-            this.source.forEach(function (data) {
-                if (data.id === dataObj.parentId && data.canEdit === 'true') {
-                    var obj = {
-                        from: moment(data.values[data.values.length - 1].to).format('YYYY-MM-DD'),
-                        to: moment(dt).format('YYYY-MM-DD'),
-                        customClass: data.values[0].customClass
-                    };
+            var ganttId = $('#gantt').data().id;
+            this.source.forEach(function (data, index, array) {
+                if (data.id === dataObj.parentId && !data.isCreated && array[index].values[0].from < dt) {
                     data.values[0].to = dt;
-                    $.ajax({
-                        method: 'post',
-                        data: {
-                            values: JSON.stringify(obj),
-                            dataId: dataObj.parentId
-                        },
-                        success: function (data) {
-                            console.log(data);
-                        }
-                    })
+                    $('.gantt').gantt({
+                        source: self.source,
+                        dow: self.dow,
+                        navigate: self.navigate,
+                        scale: self.scale,
+                        maxScale: self.maxScale,
+                        itemsPerPage: self.itemsPerPage,
+                        onAddClick: self.onAddClick,
+                        onRender: self.onRender,
+                        onItemClick: self.onItemClick
+                    });
+                    if (data.isProject) {
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: dataObj.parentId,
+                                to: dt,
+                                isProject: true
+                            }
+                        });
+                    } else {
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: dataObj.parentId,
+                                to: dt,
+                                isProject: false
+                            }
+                        });
+                    }
+                } else if ("" + data.id === "" + dataObj.parentId && data.isCreated) {
+                    if (!data.values[0].from) {
+                        data.values[0].from = dt;
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: dataObj.parentId,
+                                from: dt,
+                                dataType: 'from',
+                                isProject: false
+                            }
+                        });
+                    } else if(array[index].values[0].from < dt) {
+                        data.values[0].to = dt;
+                        $('.gantt').gantt({
+                            source: self.source,
+                            dow: self.dow,
+                            navigate: self.navigate,
+                            scale: self.scale,
+                            maxScale: self.maxScale,
+                            itemsPerPage: self.itemsPerPage,
+                            onAddClick: self.onAddClick,
+                            onRender: self.onRender,
+                            onItemClick: self.onItemClick
+                        });
+                        $.ajax({
+                            url: '/gantt/' + ganttId,
+                            method: 'post',
+                            data: {
+                                dataUpdate: true,
+                                projectId: data.projectId,
+                                taskId: dataObj.parentId,
+                                to: dt,
+                                isProject: false,
+                                dataType: 'to'
+                            }
+                        });
+                    }
                 }
-                if (data.id === dataObj.parentId) {
-                    data.values[data.values.length - 1].to = dt;
-                }
-            });
-
-            $('.gantt').gantt({
-                source: self.source,
-                dow: self.dow,
-                navigate: self.navigate,
-                scale: self.scale,
-                maxScale: self.maxScale,
-                itemsPerPage: self.itemsPerPage,
-                onAddClick: self.onAddClick,
-                onRender: self.onRender,
-                onItemClick: self.onItemClick
             });
         },
         onDeleteClick: function (dt) {
@@ -163,23 +209,6 @@
 
         }
     };
-
-    function processTaskDate(data) {
-        var projectId = data.projectId;
-        var taskId = data.taskId;
-        var taskTo = data.to;
-        var ganttId = $('#gantt').data().id;
-        $.ajax({
-            method: 'post',
-            url: '/gantt/' + ganttId,
-            data: {taskId: taskId, projectId: projectId, taskTo: taskTo},
-            success: function (data) {
-                if (data) {
-                    console.log(data);
-                }
-            }
-        });
-    }
 
     $('#gantt').gantt(
         ganttOptions
@@ -351,7 +380,6 @@
             });
         } else {
             var task = sourceData.splice(targetIndex, 1);
-            console.log(task);
             $.ajax({
                 url: '/gantt/' + ganttId,
                 method: 'delete',
