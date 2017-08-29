@@ -8,6 +8,7 @@ var engine = require('ejs-mate');
 var async = require('async');
 var _ = require('underscore');
 var moment = require('moment');
+const port = process.env.PORT || 3000;
 
 var User = require('./models/user');
 var Gantt = require('./models/gantt');
@@ -317,6 +318,6 @@ app.get('/gantt/', (req, res) => {
 });
 
 
-app.listen(3000, function () {
+app.listen(port, function () {
     console.log('App running on port 3000');
 });
